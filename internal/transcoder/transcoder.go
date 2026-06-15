@@ -47,13 +47,20 @@ func TranscodeToHLS(inputPath, outputDir string) (*HLSOutput, error) {
 	segPattern := filepath.Join(outputDir, segmentPattern)
 
 	// ffmpeg:
-	//   -codec copy        → без перекодирования, только ремукс в MPEG-TS
+	//   -codec:v libx264   → H.264 (CPU, без GPU)
+	//   -preset veryfast   → лёгкий для CPU, но сжимает хорошо
+	//   -crf 28            → баланс размера и качества
+	//   -codec:a aac -b:a 96k → сжатие аудио
 	//   -f hls             → HLS muxer outputs M3U8 playlist
 	//   -hls_segment_type mpegts → MPEG-TS container per segment
 	//   -hls_time 6        → ~6 sec per segment
 	args := []string{
 		"-i", inputPath,
-		"-codec", "copy",
+		"-codec:v", "libx264",
+		"-preset", "veryfast",
+		"-crf", "28",
+		"-codec:a", "aac",
+		"-b:a", "96k",
 		"-f", "hls",
 		"-hls_time", "6",
 		"-hls_list_size", "0",
