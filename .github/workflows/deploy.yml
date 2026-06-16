@@ -1,0 +1,50 @@
+name: Deploy Streaming Service
+
+on:
+  push:
+    branches: [main, feature/tikitiki]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/pprAImm/streaming-service:latest
+
+      - name: Deploy on server
+        run: |
+          ssh -o StrictHostKeyChecking=no root@185.23.34.25 << 'EOF'
+            docker volume create streaming_data 2>/dev/null || true
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
+            docker pull ghcr.io/pprAImm/streaming-service:latest
+            docker stop streaming-service || true
+            docker rm streaming-service || true
+            docker run -d \
+              --name streaming-service \
+              --restart always \
+              -p 8082:8082 \
+              -v streaming_data:/app/data \
+              -e VIDEOS_DIR=/app/data/videos \
+              -e TRANSCODE_DIR=/app/data/transcoded \
+              --env-file /root/.env \
+              ghcr.io/pprAImm/streaming-service:latest
+            docker image prune -f
+          EOF
