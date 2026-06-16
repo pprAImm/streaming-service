@@ -1,0 +1,10 @@
+.git
+.gitignore
+.github
+*.md
+.DS_Store
+.env
+videos/
+transcoded/
+transcode-all
+episodes.csv
