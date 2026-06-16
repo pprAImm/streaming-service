@@ -26,4 +26,4 @@ jobs:
           context: .
           file: Dockerfile.transcoder
           push: true
-          tags: ghcr.io/pprAImm/transcoder:latest
+          tags: ghcr.io/ppraimm/transcoder:latest

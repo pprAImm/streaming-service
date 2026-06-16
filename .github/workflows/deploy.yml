@@ -27,14 +27,14 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/pprAImm/streaming-service:latest
+          tags: ghcr.io/ppraimm/streaming-service:latest
 
       - name: Deploy on server
         run: |
           ssh -o StrictHostKeyChecking=no root@185.23.34.25 << 'EOF'
             docker volume create streaming_data 2>/dev/null || true
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/pprAImm/streaming-service:latest
+            docker pull ghcr.io/ppraimm/streaming-service:latest
             docker stop streaming-service || true
             docker rm streaming-service || true
             docker run -d \
@@ -45,6 +45,6 @@ jobs:
               -e VIDEOS_DIR=/app/data/videos \
               -e TRANSCODE_DIR=/app/data/transcoded \
               --env-file /root/.env \
-              ghcr.io/pprAImm/streaming-service:latest
+              ghcr.io/ppraimm/streaming-service:latest
             docker image prune -f
           EOF
