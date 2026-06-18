@@ -59,7 +59,7 @@ jobs:
               -v /root/videos:/app/videos \
               -v /root/transcoded:/app/transcoded \
               -v /root/transcode-input.csv:/app/input.csv \
-              -e DATABASE_URL="postgres://team5:qRUcobh1WcWXrY908x5M@212.8.228.70:5432/event?sslmode=require" \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               -e VIDEOS_DIR=/app/videos \
               -e TRANSCODE_DIR=/app/transcoded \
               -e STREAM_BASE_URL="http://185.23.34.25:8082/stream" \

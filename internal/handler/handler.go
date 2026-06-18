@@ -34,6 +34,13 @@ func (h *Handler) ServeHLS(w http.ResponseWriter, r *http.Request) {
 	videoID := parts[0]
 	filename := parts[1]
 
+	// Защита от path traversal
+	if strings.Contains(videoID, "/") || strings.Contains(videoID, "..") ||
+		strings.Contains(filename, "/") || strings.Contains(filename, "..") {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
 	outputDir := h.storage.TranscodeDir(videoID)
 
 	// Transcode on first access
@@ -84,6 +91,12 @@ func (h *Handler) ServeHLS(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ServeVideo(w http.ResponseWriter, r *http.Request) {
 	videoID := strings.TrimPrefix(r.URL.Path, "/videos/")
 	if videoID == "" {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	// Защита от path traversal
+	if strings.Contains(videoID, "/") || strings.Contains(videoID, "..") {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}

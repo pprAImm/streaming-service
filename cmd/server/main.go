@@ -76,7 +76,20 @@ func main() {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		allowedOrigins := []string{
+			"https://team5.verstack.ru",
+			"http://localhost:3000",
+			"http://localhost:8080",
+			"http://localhost:8081",
+		}
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
 		if r.Method == http.MethodOptions {
