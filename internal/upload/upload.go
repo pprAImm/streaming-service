@@ -115,14 +115,23 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	streamURL := fmt.Sprintf("%s/%s/index.m3u8", h.streamBase, videoID)
 	log.Printf("Stream URL: %s", streamURL)
 
-	episodeID, err := h.createEpisode(r.Context(), seriesID, title, streamURL, episodeNum)
+	// Avoid duplicates — if an episode with the same stream URL already exists for this series, return it
+	var episodeID int64
+	err = h.pool.QueryRow(r.Context(),
+		`SELECT id FROM episodes WHERE series_id = $1 AND tiktok_url = $2`,
+		seriesID, streamURL,
+	).Scan(&episodeID)
 	if err != nil {
-		log.Printf("create episode in DB: %v", err)
-		http.Error(w, "failed to create episode record", http.StatusInternalServerError)
-		return
+		episodeID, err = h.createEpisode(r.Context(), seriesID, title, streamURL, episodeNum)
+		if err != nil {
+			log.Printf("create episode in DB: %v", err)
+			http.Error(w, "failed to create episode record", http.StatusInternalServerError)
+			return
+		}
+		log.Printf("Episode %d created for series %d: %s", episodeID, seriesID, streamURL)
+	} else {
+		log.Printf("Episode %d already exists for series %d, returning existing", episodeID, seriesID)
 	}
-
-	log.Printf("Episode %d created for series %d: %s", episodeID, seriesID, streamURL)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
